@@ -12,16 +12,14 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 public class ProdutoConverter implements Converter {
 
 	@Override
-	public boolean canConvert(Class arg0) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean canConvert(Class type) {
+		return type.isAssignableFrom(Compra.class);
 	}
 
 	@Override
-	public void marshal(Object arg0, HierarchicalStreamWriter arg1, MarshallingContext arg2) {
-		// TODO Auto-generated method stub
-
-Compra compra = (Compra) obj;
+	public void marshal(Object obj, HierarchicalStreamWriter writer, MarshallingContext context) {
+		
+		Compra compra = (Compra) obj;
 		
 		writer.startNode("id");
 		context.convertAnother(compra.getId());
@@ -29,16 +27,21 @@ Compra compra = (Compra) obj;
 
 		writer.startNode("fornecedor");
 		writer.addAttribute("id", "1");
-		context.convertAnother("Sony");
+		writer.setValue("Sony");
 		writer.endNode();
 		
 		writer.startNode("produtos");
-		context.convertAnother(compra.getProdutos());
+		List<Produto> produtos = compra.getProdutos();
+		for (Produto produto : produtos) {
+			writer.startNode("produto");
+			context.convertAnother(produto);
+			writer.endNode();
+		}
 		writer.endNode();
 	}
 
 	@Override
-	public Object unmarshal(HierarchicalStreamReader arg0, UnmarshallingContext arg1) {
+	public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
 
 		Compra compra = null;
 		List<Produto> produtos = new ArrayList<>();
@@ -53,10 +56,11 @@ Compra compra = (Compra) obj;
 		reader.moveUp();
 		
 		reader.moveDown();
-		context.convertAnother(compra, List.class);
+		List<Produto> tagsProdutos = (List<Produto>) context.convertAnother(compra, List.class);
 		reader.moveUp();
 		
-		return null;
+		compra = new Compra(Integer.valueOf(id), tagsProdutos);
+		return compra;
 	}
 
 }

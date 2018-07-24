@@ -13,6 +13,9 @@ import com.thoughtworks.xstream.XStream;
 
 import br.com.alura.Xstream.Compra;
 import br.com.alura.Xstream.CompraConverter;
+import br.com.alura.Xstream.Livro;
+import br.com.alura.Xstream.Musica;
+import br.com.alura.Xstream.PrecoConverter;
 import br.com.alura.Xstream.Produto;
 import br.com.alura.Xstream.ProdutoConverter;
 
@@ -87,7 +90,7 @@ public class CompraTest {
 		assertEquals(compraEsperada, compraGerada);
 	}
 	
-	/*
+	
 	@Test
 	public void gerarCompraComObjetosIguais() {
 		
@@ -114,7 +117,7 @@ public class CompraTest {
 		
 		XStream xs = new XStream();
 		
-		xs.registerConverter(new ProdutoConverter());
+		xs.registerConverter(new CompraConverter());
 		xs.alias("compra", Compra.class);
 		xs.alias("produto", Produto.class);
 		xs.aliasField("descrição", Produto.class, "descricao");
@@ -161,7 +164,41 @@ public class CompraTest {
 		assertEquals(xmlEsperado, xmlGerado);
 	}
 	
-	@Test // falta terminar
+	/*@Test//falta terminar
+	public void gerarXMLComInterface() {
+		String xmlEsperado = "<compra>\n"+
+				"  <id>1</id>\n"+
+				"  <produtos class=\"java.util.Arrays$ArrayList\">\n"+
+				"    <livro codigo=\"1741\">\n" +
+		        "      <nome>Os Lusiadas</nome>\n" +
+		        "      <preco>30.0</preco>\n" +
+		        "      <descrição>literatura brasileira</descrição>\n" +
+		        "    </livro>\n"+
+		        "    <musica codigo=\"1742\">\n" +
+		        "      <nome>Meu Amor</nome>\n" +
+		        "      <preco>5.0</preco>\n" +
+		        "      <descrição>musica livre</descrição>\n" +
+		        "    </musica>\n"+
+		        "  </produtos>\n"+
+		        "</compra>";
+
+		
+		Compra compra = getCompraDeMusicaELivro();
+		
+		XStream xs = new XStream();
+		xs.alias("compra", Compra.class);
+		xs.alias("produto", Produto.class, ArrayList.class);
+		xs.useAttributeFor(Produto.class, "codigo");
+		xs.aliasField("descrição", Produto.class, "descricao");
+		xs.alias("livro", Livro.class);
+		xs.alias("musica", Musica.class);
+		
+		String xmlGerado = xs.toXML(compra);
+		
+		assertEquals(xmlEsperado, xmlGerado);
+		
+	}*/
+	/*@Test // Para colecoes explicitas é necessario usar o Converter
 	public void gerarColecaoExplicita() {
 		
 		String resultadoEsperado = "<compra>\n"+
@@ -188,12 +225,47 @@ public class CompraTest {
 		xs.alias("produto", Produto.class);
 		xs.aliasField("descrição", Produto.class, "descricao");
 		xs.aliasField("produtos", Compra.class, "produtos");
+		//xs.addDefaultImplementation(List.class, Produto.class);
 		xs.useAttributeFor(Produto.class, "codigo");
 
-		xs.addDefaultImplementation(ArrayList.class, List.class);
 		String xml = xs.toXML(compra);
 		
 		assertEquals(resultadoEsperado, xml);
+	}*/
+	
+	@Test
+	public void gerarXMLdeObjetosComHeranca() {
+		
+		String xmlEsperado = "<compra>\n"+
+				"  <id>1</id>\n"+
+				"  <livro codigo=\"1741\">\n" +
+		        "    <nome>Os Lusiadas</nome>\n" +
+		        "    <preco>30.0</preco>\n" +
+		        "    <descrição>literatura brasileira</descrição>\n" +
+		        "  </livro>\n"+
+		        "  <musica codigo=\"1742\">\n" +
+		        "    <nome>Meu Amor</nome>\n" +
+		        "    <preco>5.0</preco>\n" +
+		        "    <descrição>musica livre</descrição>\n" +
+		        "  </musica>\n"+
+		        "</compra>";
+		
+		
+		Compra compra = getCompraDeMusicaELivro();
+		
+		XStream xs = new XStream();
+
+		xs.alias("compra", Compra.class);
+		xs.alias("produto", Produto.class);
+		xs.aliasField("descrição", Produto.class, "descricao");
+		xs.useAttributeFor(Produto.class, "codigo");
+		xs.alias("livro", Livro.class);
+		xs.alias("musica", Musica.class);
+		xs.addImplicitCollection(Compra.class, "produtos");
+		
+		String xmlGerado = xs.toXML(compra);
+		
+		assertEquals(xmlEsperado, xmlGerado);
 	}
 	
 	@Test
@@ -233,8 +305,8 @@ public class CompraTest {
 		assertEquals(compra, compraGerada);
 	}
 	
-	@Test //falta terminar
-	public void gerarConverterGeralParaCompra() {
+	@Test
+	public void gerarXMLCustomizadoParaCompra() {
 		
 		String resultadoEsperado = "<compra>\n"+
 				"  <id>1</id>\n"+
@@ -257,21 +329,19 @@ public class CompraTest {
 		
 		XStream xs = new XStream();
 
-		xs.registerConverter(new CompraConverter());
+		xs.registerConverter(new ProdutoConverter());
 		
 		xs.alias("compra", Compra.class);
 		xs.alias("produto", Produto.class);
 		xs.aliasField("descrição", Produto.class, "descricao");
 		xs.useAttributeFor(Produto.class, "codigo");
-
-		
 		
 		String xml = xs.toXML(compra);
 		assertEquals(resultadoEsperado, xml);
 		
 		Compra compraGerada = (Compra) xs.fromXML(resultadoEsperado);
 		assertEquals(compra, compraGerada);
-	}*/
+	}
 	
 	private Compra getCompra() {
 		Produto geladeira = new Produto("geladeira", 1000.0, "geladeira duas portas", 1587);
@@ -284,6 +354,13 @@ public class CompraTest {
 		Produto geladeira = new Produto("geladeira", 1000.0, "geladeira duas portas", 1587);
 		Produto ferro = new Produto("ferro", 60.0, "ferro de passar", 1588);
 		Compra compra = new Compra(01, Arrays.asList(geladeira, geladeira, ferro));
+		return compra;
+	}
+	
+	private Compra getCompraDeMusicaELivro() {
+		Produto livro = new Livro("Os Lusiadas", 30.0, "literatura brasileira", 1741);
+		Produto musica = new Musica("Meu Amor", 5.0, "musica livre", 1742);
+		Compra compra = new Compra(01, Arrays.asList(livro, musica));
 		return compra;
 	}
 }
